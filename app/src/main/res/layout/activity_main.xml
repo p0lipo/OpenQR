@@ -11,7 +11,24 @@
         android:text="Hello World!" /-->
     <Button
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/button_go"
-        android:text="S C A N"/>
+        android:layout_height="wrap_content"
+        android:id="@+id/button_scan"
+        android:text="S C A N"
+        android:onClick="startScan"/>
+
+    <Button
+        android:layout_below="@id/button_scan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_browser"
+        android:text="OPEN TEXT IN BROWSER"
+        android:onClick="startBrowser"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/scanned_text"
+        android:text="SCANNED TEXT"
+        android:layout_alignParentBottom="true"/>
+
 </RelativeLayout>

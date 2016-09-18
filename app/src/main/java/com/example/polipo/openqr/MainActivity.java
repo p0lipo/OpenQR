@@ -5,49 +5,109 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Context context;
+    private static final String TAG = "MainActivity";
+
+    private String scannedText;
+    private TextView textView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        context = this.getApplicationContext();
-        startScan();
-
-        final Button buttonGo = (Button) findViewById(R.id.button_go);
-        buttonGo.setOnClickListener(new View.OnClickListener() {
-            public void onClick(final View v) {
-                // Perform action on click
-                startScan();
-
-            }});
+        textView = (TextView) findViewById(R.id.scanned_text);
     }
 
-    public void startScan() {
-        Intent intent = new Intent("com.google.zxing.client.android.SCAN");
-        startActivityForResult(intent, 0);
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.e(TAG,"On Start ....." );
+        //new IntentIntegrator(this).initiateScan();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.e(TAG,"On Resume ....." );
+        //new IntentIntegrator(this).initiateScan();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.e(TAG, "On Pause .....");
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.e(TAG,"On Restart ....." );
+        //new IntentIntegrator(this).initiateScan();
     }
 
 
-    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        if (requestCode == 0) {
-            if (resultCode == RESULT_OK) {
-                String contents = intent.getStringExtra("SCAN_RESULT");
-                String format = intent.getStringExtra("SCAN_RESULT_FORMAT");
-                // Handle successful scan
-                if (contents.startsWith("http://") | contents.startsWith("https://")) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(contents));
-                    startActivity(browserIntent);
-                } else Toast.makeText(context, contents, Toast.LENGTH_LONG).show();
-            } else if (resultCode == RESULT_CANCELED) {
-                //Handle cancel
-                Toast.makeText(context, "Something went wrong...", Toast.LENGTH_LONG).show();
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if(result != null) {
+            if(result.getContents() == null) {
+                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG).show();
+                setText(result.getContents());
             }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
+
+    private void setClipboard(String text) {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB) {
+            android.text.ClipboardManager clipboard = (android.text.ClipboardManager) this.getSystemService(Context.CLIPBOARD_SERVICE);
+            clipboard.setText(text);
+        } else {
+            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) this.getSystemService(Context.CLIPBOARD_SERVICE);
+            android.content.ClipData clip = android.content.ClipData.newPlainText("Text : ", text);
+            clipboard.setPrimaryClip(clip);
+        }
+    }
+
+    public void startScan(View view) {
+        IntentIntegrator integrator = new IntentIntegrator(this);
+        integrator.setOrientationLocked(false);
+        integrator.initiateScan();
+    }
+
+    public void startBrowser (View view) {
+        if (scannedText != null) {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(scannedText));
+            startActivity(browserIntent);
+        } else {
+            Toast.makeText(this, "Nothing scanned...", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public boolean setText(String text) {
+        if (text != null) {
+            scannedText = text;
+            textView.setText(text);
+            setClipboard(text);
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
 }
