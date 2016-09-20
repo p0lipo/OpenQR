@@ -91,6 +91,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void startBrowser (View view) {
         if (scannedText != null) {
+            if (!scannedText.startsWith("http://") && !scannedText.startsWith("https://"))
+                scannedText = "http://" + scannedText;
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(scannedText));
             startActivity(browserIntent);
         } else {
